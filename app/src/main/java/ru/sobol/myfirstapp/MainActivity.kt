@@ -1,143 +1,130 @@
 package ru.sobol.myfirstapp
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
+import ru.sobol.myfirstapp.adapter.OnPostInteractionListener
+import ru.sobol.myfirstapp.adapter.PostsAdapter
 import ru.sobol.myfirstapp.databinding.ActivityMainBinding
 import ru.sobol.myfirstapp.dto.Post
 import ru.sobol.myfirstapp.viewmodel.PostViewModel
-import java.text.DecimalFormat
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
-    // Делегирование создания ViewModel
     private val viewModel: PostViewModel by viewModels()
+
+    // ID поста, который редактируется (0 = новый пост)
+    private var editingPostId: Long = 0L
+
+    private val interactionListener = object : OnPostInteractionListener {
+        override fun onLike(post: Post) {
+            viewModel.likeById(post.id)
+        }
+
+        override fun onShare(post: Post) {
+            viewModel.shareById(post.id)
+            Toast.makeText(this@MainActivity, "Репост +1", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onEdit(post: Post) {
+            // Сохраняем ID редактируемого поста
+            editingPostId = post.id
+            // Устанавливаем текст в поле ввода
+            binding.content.setText(post.content)
+            binding.content.setSelection(binding.content.text.length)
+            // Переводим фокус и показываем клавиатуру
+            binding.content.requestFocus()
+            showKeyboard(binding.content)
+            // Показываем панель отмены
+            binding.cancelGroup.visibility = View.VISIBLE
+        }
+
+        override fun onRemove(post: Post) {
+            viewModel.removeById(post.id)
+            Toast.makeText(this@MainActivity, "Пост удален", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onAvatarClick(post: Post) {
+            Toast.makeText(this@MainActivity, "Профиль: ${post.author}", Toast.LENGTH_SHORT).show()
+            viewModel.increaseViews(post.id)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("Activity: onCreate")
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Подписываемся на изменения данных
-        viewModel.data.observe(this) { post ->
-            // Этот код будет выполняться каждый раз, когда данные изменяются
-            bindPost(post)
+        // Настройка адаптера
+        val adapter = PostsAdapter(interactionListener)
+        binding.list.adapter = adapter
+
+        // Наблюдение за списком постов
+        viewModel.data.observe(this) { posts ->
+            adapter.submitList(posts)
         }
 
-        setupClickListeners()
-    }
-    override fun onStart() {
-        super.onStart()
-        println("Activity: onStart")
-    }
+        // Отслеживание изменений текста от пользователя
+        binding.content.addTextChangedListener { text ->
+            // Обновляем ViewModel при изменении текста пользователем
+            viewModel.changeContent(text.toString())
+        }
 
-    override fun onResume() {
-        super.onResume()
-        println("Activity: onResume")
-    }
+        // Кнопка сохранения
+        binding.save.setOnClickListener {
+            val text = binding.content.text.toString()
+            if (text.isBlank()) {
+                Toast.makeText(this, "Введите текст поста", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-    override fun onPause() {
-        super.onPause()
-        println("Activity: onPause")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        println("Activity: onStop")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        println("Activity: onDestroy")
-    }
-
-    private fun bindPost(post: Post) {
-        binding.apply {
-            author.text = post.author
-            published.text = post.published
-            content.text = post.content
-
-            // Форматируем и отображаем счетчики
-            likeCount.text = formatCount(post.likes)
-            shareCount.text = formatCount(post.shares)
-            viewsCount.text = formatCount(post.views)
-
-            // Устанавливаем иконку лайка в зависимости от состояния
-            if (post.likedByMe) {
-                like.setImageResource(R.drawable.ic_like_filled)
+            // Если редактируем существующий пост
+            if (editingPostId != 0L) {
+                // Получаем текущий пост из ViewModel, обновляем его контент и сохраняем
+                viewModel.saveEditedPost(editingPostId, text)
+                editingPostId = 0L
             } else {
-                like.setImageResource(R.drawable.ic_like_border)
+                // Создаем новый пост
+                viewModel.changeContent(text)
+                viewModel.save()
             }
 
-            // Пример с ссылкой
-            linkTitle.text = "Путешевствие в мир животных"
-            linkUrl.text = "zoo.ru"
+            // Очищаем поле ввода
+            binding.content.text.clear()
+            // Скрываем панель отмены
+            binding.cancelGroup.visibility = View.GONE
+            // Скрываем клавиатуру
+            hideKeyboard(binding.content)
+        }
+
+        // Кнопка отмены редактирования
+        binding.cancel.setOnClickListener {
+            // Очищаем ID редактируемого поста
+            editingPostId = 0L
+            // Очищаем поле ввода
+            binding.content.text.clear()
+            // Скрываем панель отмены
+            binding.cancelGroup.visibility = View.GONE
+            // Скрываем клавиатуру
+            hideKeyboard(binding.content)
+            // Отменяем редактирование в ViewModel
+            viewModel.cancelEdit()
         }
     }
 
-    private fun setupClickListeners() {
-        binding.apply {
-            // Обработка лайка - вызываем метод ViewModel
-            like.setOnClickListener {
-                viewModel.like()
-                Toast.makeText(this@MainActivity, "Лайк", Toast.LENGTH_SHORT).show()
-            }
-
-            // Обработка репоста - вызываем метод ViewModel
-            share.setOnClickListener {
-                viewModel.share()
-                Toast.makeText(this@MainActivity, "Репост +1", Toast.LENGTH_SHORT).show()
-            }
-
-            menu.setOnClickListener {
-                Toast.makeText(this@MainActivity, "Меню поста", Toast.LENGTH_SHORT).show()
-            }
-
-            avatar.setOnClickListener {
-                Toast.makeText(this@MainActivity, "Профиль автора", Toast.LENGTH_SHORT).show()
-                // Увеличиваем просмотры при клике на аватар (для примера)
-                viewModel.increaseViews()
-            }
-
-            // Для исследования поведения
-            root.setOnClickListener {
-                println("CLICK: корневой layout")
-                Toast.makeText(this@MainActivity, "Клик по фону", Toast.LENGTH_SHORT).show()
-            }
-        }
+    private fun hideKeyboard(view: View) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-
-    //Форматирует число в удобочитаемый вид (скопировано с прошлого занятия)
-
-    private fun formatCount(count: Int): String {
-        return when {
-            count >= 1_000_000 -> {
-                val millions = count / 1_000_000.0
-                if (millions % 1.0 == 0.0) {
-                    "${millions.toInt()}M"
-                } else {
-                    DecimalFormat(".").format(millions) + "M"
-                }
-            }
-            count >= 10_000 -> {
-                "${count / 1000}K"
-            }
-            count >= 1_000 -> {
-                val thousands = count / 1000.0
-                if (thousands % 1.0 == 0.0) {
-                    "${thousands.toInt()}K"
-                } else {
-                    DecimalFormat(".").format(thousands) + "K"
-                }
-            }
-            else -> count.toString()
-        }
+    private fun showKeyboard(view: View) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(view, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
     }
 }
 
