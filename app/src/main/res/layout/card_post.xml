@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/background_light"
+    tools:context=".MainActivity">
+
+<ImageView
+    android:id="@+id/avatar"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:contentDescription="@string/avatar_description"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:srcCompat="@drawable/ic_launcher_foreground" />
+
+<TextView
+    android:id="@+id/author"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:singleLine="true"
+    android:ellipsize="end"
+    app:layout_constraintStart_toEndOf="@id/avatar"
+    app:layout_constraintEnd_toStartOf="@id/menu"
+    app:layout_constraintTop_toTopOf="@id/avatar"
+    app:layout_constraintBottom_toTopOf="@id/published"
+    android:text="Мир животных. Путешествие в удивительный мир природы" />
+
+<TextView
+    android:id="@+id/published"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:textSize="14sp"
+    android:textColor="@android:color/darker_gray"
+    app:layout_constraintStart_toStartOf="@id/author"
+    app:layout_constraintEnd_toEndOf="@id/author"
+    app:layout_constraintTop_toBottomOf="@id/author"
+    app:layout_constraintBottom_toBottomOf="@id/avatar"
+    android:text="11 мая в 11:11" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/menu"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:contentDescription="@string/menu_description"
+        app:icon="@drawable/ic_menu"
+        app:iconGravity="textStart"
+        style="@style/Widget.AppTheme.MenuButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/avatar" />
+
+
+<androidx.constraintlayout.widget.Barrier
+    android:id="@+id/barrier"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:barrierDirection="bottom"
+    app:constraint_referenced_ids="avatar,author,published,menu" />
+
+<TextView
+    android:id="@+id/content"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:textSize="16sp"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/barrier"
+    android:text="Животные — удивительные существа, которые нас окружают. Они бывают разными — от милых домашних питомцев до диких зверей. Каждый вид играет важную роль в экосистеме, и забота о них помогает сохранить баланс природы. Изучая животных, мы лучше понимаем окружающий мир и учимся уважать других существ." />
+
+    <LinearLayout
+        android:id="@+id/link_block"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/darker_gray"
+    android:backgroundTint="#1A000000"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/videoContainer" >
+
+    <TextView
+        android:id="@+id/link_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/purple_500"
+        android:text="Путешествие в мир животных" />
+
+    <TextView
+        android:id="@+id/link_url"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="zoo.ru"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="12sp" />
+</LinearLayout>
+    <FrameLayout
+        android:id="@+id/videoContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+    <!-- Блок действий -->
+    <LinearLayout
+        android:id="@+id/actions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/link_block" >
+
+        <!-- Кнопка лайка (Toggle Button) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/like"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:contentDescription="@string/like_description"
+            app:icon="@drawable/ic_like_border"
+            app:iconGravity="textStart"
+            android:text="0"
+            style="@style/Widget.AppTheme.LikeButton" />
+
+        <!-- Кнопка репоста -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/share"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:contentDescription="@string/share_description"
+            app:icon="@drawable/ic_share"
+            app:iconGravity="textStart"
+            android:text="0"
+            style="@style/Widget.AppTheme.ShareButton" />
+
+        <!-- Кнопка просмотров (не кликабельная, просто для отображения) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/views"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:contentDescription="@string/views_description"
+            app:icon="@drawable/ic_visibility"
+            app:iconGravity="textStart"
+            android:text="0"
+            style="@style/Widget.AppTheme.ShareButton" />
+
+    </LinearLayout>
+
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
